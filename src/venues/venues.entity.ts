@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Concert } from '../concert/concert.entity';
+import { Concerts } from '../concerts/concerts.entity';
 
 @Entity()
-export class Venue {
+export class Venues {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -19,6 +19,6 @@ export class Venue {
   })
   longitude: string;
 
-  @OneToMany(() => Concert, concert => concert.venue)
-  concerts: Concert[];
+  @OneToMany(() => Concerts, concert => concert.venue)
+  concerts: Concerts[];
 }
