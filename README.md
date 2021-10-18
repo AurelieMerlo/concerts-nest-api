@@ -63,23 +63,21 @@ radius = integer
 Result is sorted by descending date
 
 ```json
-{
-  "data": [
-    {
-        "band": "Radiohead",
-        "location": "Point Ephémère, Paris, France",
-        "date": 1569531810650,
-        "latitude": 48.8814422,
-        "longitude": 2.3684356
-    }
-  ]
-}
+[
+  {
+    "band": "Radiohead",
+    "location": "Point Ephémère, Paris, France",
+    "date": 1569531810650,
+    "latitude": 48.8814422,
+    "longitude": 2.3684356
+  }
+]
 ```
 
 ### Error Message
 
 **When band is unknown**
-GET `/v1/concerts?bands=0`
+GET `/v1/concerts?bandIds=0`
 
 ```json
 {
@@ -107,3 +105,7 @@ GET `/v1/concerts`
 }
 ```
 
+## TODO
+
+- HTTP response and Error Messages
+- Tests
