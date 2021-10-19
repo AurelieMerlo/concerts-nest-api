@@ -35,7 +35,7 @@ $ yarn run test:e2e
 $ yarn run test:cov
 ```
 
-## Contract
+## API ontract
 
 ### Objects
 
@@ -46,6 +46,8 @@ $ yarn run test:cov
 ### Input
 
 I use Postman to sending requests when server is started (`yarn start --watch`)
+
+There is only one endpoint (`/concerts`) that can be accept several query parameters :
 
 **Search concerts by bands**
 GET `/v1/concerts?bands={ids}`
@@ -107,5 +109,8 @@ GET `/v1/concerts`
 
 ## TODO
 
+- Fix SQL squery on lat/lg/radius
 - HTTP response and Error Messages
-- Tests
+- Tests (Contract Tests)
+- Swagger
+- Step 2
