@@ -2,9 +2,10 @@ import { Controller, Get, Query, ClassSerializerInterceptor, UseInterceptors, Ht
 import { orderBy } from 'lodash';
 import { isObjectEmpty, serializedItem } from 'src/utils';
 import { ConcertsService } from './concerts.service';
-import { GetConcertsDto } from './dto/get-concerts.dto';
 import { plainToClass } from 'class-transformer';
 import { Concerts } from './concerts.entity';
+import { ConcertsDto } from './dto/concerts.dto';
+import { validate } from 'class-validator';
 
 @Controller('concerts')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -12,11 +13,14 @@ export class ConcertsController {
   constructor(private readonly concertsService: ConcertsService) {}
   
   @Get()
-  async getConcerts(@Query() queryParams?: GetConcertsDto) {
+  async getConcerts(@Query() queryParams?: ConcertsDto) {
     let result: Concerts[];
     
     try {
       if (isObjectEmpty(queryParams)) {
+        validate(queryParams, {
+          groups: ['bands'],
+        });
         result = await this.concertsService.findAll();
       };
   
@@ -28,7 +32,7 @@ export class ConcertsController {
         result = await this.concertsService.findByLocation(queryParams);
       }
     } catch (e) {
-      throw new HttpException('No result found', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     const orderedResult: Concerts[] = orderBy(result, [concert => new Date(concert.date)], ['desc']);

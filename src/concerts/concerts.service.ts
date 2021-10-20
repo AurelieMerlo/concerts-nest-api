@@ -1,11 +1,9 @@
-import { orderBy } from 'lodash';
-
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Param } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getConnection, In, Repository } from 'typeorm';
 import { Concerts } from './concerts.entity';
-import { GetConcertsDto } from './dto/get-concerts.dto';
 import { Venues } from 'src/venues/venues.entity';
+import { ConcertsDto } from './dto/concerts.dto';
 
 @Injectable()
 export class ConcertsService {
@@ -18,13 +16,11 @@ export class ConcertsService {
     return this.concertsRepository.find();
   };
 
-  async findByBands(params: GetConcertsDto): Promise<Concerts[]> {
-    const paramBandIds = params.bandIds || '';
-    
-    const bandIds = paramBandIds.split(',');
+  async findByBands(@Param() { bandIds }: ConcertsDto): Promise<Concerts[]> {    
+    const ids = bandIds.split(',');
     const query = {
       where: {
-        bandId: In(bandIds),
+        bandId: In(ids),
       },
       relations: ['band', 'venue'],
     }
@@ -38,11 +34,7 @@ export class ConcertsService {
     return result;
   }
 
-  async findByLocation(params: GetConcertsDto): Promise<Concerts[]> {
-    const longitude = params.longitude;
-    const latitude = params.latitude;
-    const radius = params.radius;
-
+  async findByLocation(@Param() { longitude, latitude, radius }: ConcertsDto): Promise<Concerts[]> {
     const origin = {
       type: "Point",
       coordinates: [parseFloat(longitude), parseFloat(latitude)]
