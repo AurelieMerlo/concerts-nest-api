@@ -5,11 +5,11 @@ export class GetConcertsDto{
   bandIds: string;
 
   @IsString()
-  latitude: number;
+  latitude: string;
 
   @IsString()
-  longitude: number;
+  longitude: string;
 
   @IsInt()
-  radius: number;
+  radius: string;
 }

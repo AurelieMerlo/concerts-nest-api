@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from 'typeorm';
 import { Exclude, Expose } from "class-transformer";
 import { Concerts } from '../concerts/concerts.entity';
 
@@ -12,17 +12,11 @@ export class Venues {
   @Expose()
   name: string;
 
-  @Column({
-    type: 'float',
-  })
-  @Expose()
+  @Column({ type: 'double precision' })
   latitude: number;
 
-  @Column({
-    type: 'float',
-  })
-  @Expose()
-  longitude: number;
+  @Column({ type: 'double precision' })
+  longitude: number; 
 
   @OneToMany(() => Concerts, concert => concert.venue)
   concerts: Concerts[];

@@ -1,19 +1,11 @@
-import { orderBy, isEmpty } from 'lodash';
+import { orderBy } from 'lodash';
 
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getConnection, In, Repository } from 'typeorm';
 import { Concerts } from './concerts.entity';
 import { GetConcertsDto } from './dto/get-concerts.dto';
 import { Venues } from 'src/venues/venues.entity';
-
-export type Point = {
-  type: string,
-  coordinates: {
-    lg: number,
-    lat: number,
-  }
-}
 
 @Injectable()
 export class ConcertsService {
@@ -26,46 +18,61 @@ export class ConcertsService {
     return this.concertsRepository.find();
   };
 
-  async findBy(params: GetConcertsDto): Promise<Concerts[]> {
+  async findByBands(params: GetConcertsDto): Promise<Concerts[]> {
     const paramBandIds = params.bandIds || '';
-    const geoSpatialParams = [params.longitude, params.latitude, params.radius];
-
-    let queryResult;
     
-    if (!isEmpty(paramBandIds)) {
-      const bandIds = paramBandIds.split(',');
-      const query = {
-        where: {
-          bandId: In(bandIds),
-        },
-        relations: ['band', 'venue'],
-      }  
-
-      queryResult = await this.concertsRepository.find(query);
-    };
-
-    if (!geoSpatialParams.includes(undefined)) {
-      const longitude = params.longitude
-      const latitude = params.latitude
-      const radius = params.radius
-
-      let origin: Point = {
-        type: "Point",
-        coordinates: {
-          lg: longitude, 
-          lat: latitude,
-        }
-      };
-
-      queryResult = await getConnection()
-                          .getRepository(Venues)
-                          .createQueryBuilder('venues')
-                          .where(':lg', { lg: longitude })
-                          .getMany();
+    const bandIds = paramBandIds.split(',');
+    const query = {
+      where: {
+        bandId: In(bandIds),
+      },
+      relations: ['band', 'venue'],
     }
 
-    const concertsSortedByDate = orderBy(queryResult, [concert => new Date(concert.date)], ['desc']);
-    
-    return concertsSortedByDate;
+    const result = await this.concertsRepository.find(query);
+
+    if(result.length === 0) {
+      throw new HttpException('No result found', HttpStatus.NO_CONTENT);
+    };
+      
+    return result;
+  }
+
+  async findByLocation(params: GetConcertsDto): Promise<Concerts[]> {
+    const longitude = params.longitude;
+    const latitude = params.latitude;
+    const radius = params.radius;
+
+    const origin = {
+      type: "Point",
+      coordinates: [parseFloat(longitude), parseFloat(latitude)]
+    };
+
+    const matchedVenuesIds = await getConnection()
+                                    .getRepository(Venues)
+                                    .createQueryBuilder('venues')
+                                    .select('venues.id')
+                                    .addSelect("SUBSTRING(3959 * acos (cos ( radians(78.3232) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(65.3234) ) + sin ( radians(78.3232) ) * sin( radians( lat ) ))))", "distance")
+                                    .having("distance <= :radius", { radius: radius })
+                                    .setParameters({
+                                      origin: JSON.stringify(origin),
+                                      radius: parseInt(radius)*1000 //KM conversion
+                                    })
+                                    .getMany();
+
+    const matchedConcerts = await getConnection()
+                                .getRepository(Concerts)
+                                .createQueryBuilder('concerts')
+                                .leftJoinAndSelect("concerts.band", "band")
+                                .leftJoinAndSelect("concerts.venue", "venue")
+                                .where('concerts.venueId IN (:...matchedVenuesIds)', { matchedVenuesIds: matchedVenuesIds})
+                                .getMany();
+                                // .getQuery();
+
+    if(matchedConcerts.length === 0) {
+      throw new HttpException('No result found', HttpStatus.NO_CONTENT);
+    };
+      
+    return matchedConcerts;
   }
 }

@@ -1,4 +1,5 @@
-import { Controller, Get, Query, ClassSerializerInterceptor, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Query, ClassSerializerInterceptor, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { orderBy } from 'lodash';
 import { isObjectEmpty, serializedItem } from 'src/utils';
 import { ConcertsService } from './concerts.service';
 import { GetConcertsDto } from './dto/get-concerts.dto';
@@ -11,16 +12,28 @@ export class ConcertsController {
   constructor(private readonly concertsService: ConcertsService) {}
   
   @Get()
-  getConcerts(@Query() queryParams?: GetConcertsDto) {
-    if (isObjectEmpty(queryParams)) {
-      return this.concertsService.findAll();
-    };
+  async getConcerts(@Query() queryParams?: GetConcertsDto) {
+    let result: Concerts[];
+    
+    try {
+      if (isObjectEmpty(queryParams)) {
+        result = await this.concertsService.findAll();
+      };
+  
+      if (queryParams.bandIds) {
+        result = await this.concertsService.findByBands(queryParams);
+      }
+  
+      if (queryParams.longitude && queryParams.latitude && queryParams.radius) {
+        result = await this.concertsService.findByLocation(queryParams);
+      }
+    } catch (e) {
+      throw new HttpException('No result found', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
-    const result = this.concertsService.findBy(queryParams).then((concerts: Concerts[]) => {
-      const serializedConcerts = plainToClass(Concerts, concerts);
-      return serializedConcerts.map((concert) => serializedItem(concert));
-    });
+    const orderedResult: Concerts[] = orderBy(result, [concert => new Date(concert.date)], ['desc']);
 
-    return result;
+    const serializedResult = plainToClass(Concerts, orderedResult);
+    return serializedResult.map((concert) => serializedItem(concert, concert.band, concert.venue));
   }
 }

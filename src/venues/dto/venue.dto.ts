@@ -4,6 +4,6 @@ import { Exclude, Expose } from "class-transformer";
 export class VenueDto {
   @Exclude() id: number;
   @Expose() name: string;
-  @Expose() latitude: number;
-  @Expose() longitude: number;
+  @Expose() latitude: string;
+  @Expose() longitude: string;
 }

@@ -10,22 +10,20 @@ export class Concerts {
   id: number;
   
   @Column()
-  @Exclude()
-  bandId: number;
-
-  @Column()
-  @Exclude()
-  venueId: number;
-
-  @Column()
   @Expose()
   date: number;
 
-  @ManyToOne(type => Bands, band => band.concerts, { eager: false })
-  @JoinColumn()
-  band: Bands
+  @ManyToOne(type => Bands, band => band.concerts)
+  @JoinColumn({ name: "bandId" })
+  band: Bands;
 
-  @ManyToOne(type => Venues, venue => venue.concerts, { eager: false })
-  @JoinColumn()
-  venue: Venues
+  @ManyToOne(type => Venues, venue => venue.concerts)
+  @JoinColumn({ name: "venueId" })
+  venue: Venues;
+ 
+  @Column({ nullable: false })
+  venueId: number;
+
+  @Column({ nullable: false })
+  bandId: number;
 }
