@@ -78,17 +78,14 @@ Result is sorted by descending date
 
 ### Error Message
 
-**When band is unknown**
-GET `/v1/concerts?bandIds=0`
+**Wrong endpoint**
+GET `concert?longitude=2.37939&latitude=43.6397&radius=10`
 
 ```json
 {
-  "errors": [
-    {
-      "status": "404",
-      "title":  "Not Found"
-    }
-  ]
+    "statusCode": 404,
+    "message": "Cannot GET /concert?longitude=2.37939&latitude=43.6397&radius=10",
+    "error": "Not Found"
 }
 ```
 
@@ -109,8 +106,6 @@ GET `/v1/concerts`
 
 ## TODO
 
-- Fix SQL squery on lat/lg/radius
-- HTTP response and Error Messages
 - Tests (Contract Tests)
 - Swagger
 - Step 2
