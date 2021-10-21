@@ -47,22 +47,23 @@ $ yarn run test:cov
 
 I use Postman to sending requests when server is started (`yarn start --watch`)
 
-There is only one endpoint (`/concerts`) that can be accept several query parameters :
+There is only one endpoint (`/api/concerts`) that can be accept several query parameters:
 
 **Search concerts by bands**
-GET `/v1/concerts?bands={ids}`
+GET `/api/concerts?bands={ids}`
 
-ids = integers, comma separated list
+where ids are string separated by comma.
 
 **Search concert by latitude/longitude/radius**
-GET `/v1/concerts?lat=x,lg=x,radius=z`
+GET `/api/concerts?location={"longitude": {long}, "latitude": {lat}, "radius": {rad}}`
 
-lat, lg = float
-radius = integer
+where long, lat and rad are strings
+
+You can launch Swagger for testing API with this URL: `http://localhost:3000/api`
 
 ### Output
 
-Result is sorted by descending date
+Results are sorted by descending date:
 
 ```json
 [
@@ -79,5 +80,4 @@ Result is sorted by descending date
 ## TODO
 
 - Tests (Contract Tests)
-- Swagger
 - Step 2

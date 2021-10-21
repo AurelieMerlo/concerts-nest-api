@@ -20,3 +20,10 @@ export function serializedItem(concert: Concerts, band: Bands, venue: Venues) {
     longitude: venueLongitude,
   }
 }
+
+export function allMandatoriesAttributes(locationParams): boolean {
+  const keysParam = Object.keys(JSON.parse(locationParams));
+  const coordinatesKeys = ['longitude', 'latitude', 'radius'];
+
+  return keysParam.length === coordinatesKeys.length && keysParam.every((v, i) => v === coordinatesKeys[i]);
+}

@@ -1,11 +1,12 @@
-import { Controller, Get, Query, ClassSerializerInterceptor, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Query, ClassSerializerInterceptor, UseInterceptors, HttpException, HttpStatus, ValidationPipe } from '@nestjs/common';
 import { orderBy } from 'lodash';
-import { isObjectEmpty, serializedItem } from 'src/utils';
+import { allMandatoriesAttributes, serializedItem } from 'src/utils';
 import { ConcertsService } from './concerts.service';
 import { plainToClass } from 'class-transformer';
 import { Concerts } from './concerts.entity';
-import { ConcertsDto } from './dto/concerts.dto';
-import { validate } from 'class-validator';
+import { ConcertDto } from './dto/concert.dto';
+import { Coordinates, Result } from '../types';
+import { isEmpty } from 'lodash';
 
 @Controller('concerts')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -13,31 +14,43 @@ export class ConcertsController {
   constructor(private readonly concertsService: ConcertsService) {}
   
   @Get()
-  async getConcerts(@Query() queryParams?: ConcertsDto) {
-    let result: Concerts[];
+  async list(
+    @Query('bandIds') bandIds?: string,
+    @Query('location') location?: Coordinates,
+  ) {
+    let result: ConcertDto[];
+
+    if (bandIds) {
+      if (isEmpty(bandIds)) {
+        throw new HttpException('Missing value in parameter "bandIds"', HttpStatus.BAD_REQUEST);
+      }
+      if (typeof bandIds !== 'string') {
+        throw new HttpException('Values in parameter "bandIds" must be strings', HttpStatus.BAD_REQUEST);
+      }
+      result = await this.concertsService.searchByBands(bandIds);
+    } 
     
-    try {
-      if (isObjectEmpty(queryParams)) {
-        validate(queryParams, {
-          groups: ['bands'],
-        });
-        result = await this.concertsService.findAll();
-      };
-  
-      if (queryParams.bandIds) {
-        result = await this.concertsService.findByBands(queryParams);
+    if (location) {
+      if (typeof location !== 'string') {
+        throw new HttpException('Parameter "location" must be a string', HttpStatus.BAD_REQUEST);
       }
-  
-      if (queryParams.longitude && queryParams.latitude && queryParams.radius) {
-        result = await this.concertsService.findByLocation(queryParams);
+
+      if (!allMandatoriesAttributes(location)) {
+        throw new HttpException('Missing attribute "longitude", "latitude" or "radius" in parameter "Location"', HttpStatus.BAD_REQUEST);
       }
-    } catch (e) {
-      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      
+      result = await this.concertsService.searchByLocation(location);
+    } 
+
+    if (!result.length) {
+      throw new HttpException('No concerts found', HttpStatus.NO_CONTENT);
     }
 
     const orderedResult: Concerts[] = orderBy(result, [concert => new Date(concert.date)], ['desc']);
 
-    const serializedResult = plainToClass(Concerts, orderedResult);
-    return serializedResult.map((concert) => serializedItem(concert, concert.band, concert.venue));
+    const classResult = plainToClass(Concerts, orderedResult);
+    const serializedResult: Result[] = classResult.map((concert) => serializedItem(concert, concert.band, concert.venue));
+    
+    return serializedResult;
   }
 }
