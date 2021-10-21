@@ -4,6 +4,7 @@ import { getConnection, In, Repository } from 'typeorm';
 import { Concerts } from './concerts.entity';
 import { Venues } from 'src/venues/venues.entity';
 import { ConcertsDto } from './dto/concerts.dto';
+import { isEmpty } from 'lodash';
 
 @Injectable()
 export class ConcertsService {
@@ -27,7 +28,7 @@ export class ConcertsService {
 
     const result = await this.concertsRepository.find(query);
 
-    if(result.length === 0) {
+    if(isEmpty(result)) {
       throw new HttpException('No result found', HttpStatus.NO_CONTENT);
     };
       
@@ -51,6 +52,9 @@ export class ConcertsService {
                                       radius: parseInt(radius)*1000 //KM conversion
                                     })
                                     .getMany();
+                                    // .getQuery(); decomment this for debug
+
+                                    console.log(matchedVenuesIds);
 
     const matchedConcerts = await getConnection()
                                 .getRepository(Concerts)
@@ -59,7 +63,7 @@ export class ConcertsService {
                                 .leftJoinAndSelect("concerts.venue", "venue")
                                 .where('concerts.venueId IN (:...matchedVenuesIds)', { matchedVenuesIds: matchedVenuesIds})
                                 .getMany();
-                                // .getQuery();
+                                // .getQuery(); decomment this for debug
 
     if(matchedConcerts.length === 0) {
       throw new HttpException('No result found', HttpStatus.NO_CONTENT);

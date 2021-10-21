@@ -76,34 +76,6 @@ Result is sorted by descending date
 ]
 ```
 
-### Error Message
-
-**Wrong endpoint**
-GET `concert?longitude=2.37939&latitude=43.6397&radius=10`
-
-```json
-{
-    "statusCode": 404,
-    "message": "Cannot GET /concert?longitude=2.37939&latitude=43.6397&radius=10",
-    "error": "Not Found"
-}
-```
-
-**When query is malformed**
-GET `/v1/concerts`
-
-```json
-{
-  "errors": [
-    {
-      "status": "400",
-      "title":  "Invalid Parameters",
-      "detail":  "Missing `bands` query parameter."
-    }
-  ]
-}
-```
-
 ## TODO
 
 - Tests (Contract Tests)
